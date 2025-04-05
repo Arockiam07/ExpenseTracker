@@ -41,9 +41,9 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      "/api": "http://localhost:8000",
+      "/api": "https://expensetracker-5iq2.onrender.com",
       "/uploads": {
-        target: "http://localhost:8000",
+        target: "https://expensetracker-5iq2.onrender.com",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/uploads/, "/uploads"),
       },
