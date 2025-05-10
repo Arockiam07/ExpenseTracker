@@ -10,34 +10,39 @@ import { UserContext } from '../../context/UserContext';
 import uploadImage from '../../utils/uploadImage';
 
 const SignUp = () => {
-  const[profilePic, setProfilePic] = useState(null);
+  const [profilePic, setProfilePic] = useState(null);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const {updateUser} = useContext(UserContext);
+  const { updateUser } = useContext(UserContext);
 
   const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   // handle signup form submit
-  const handleSignUp = async(e) => {
+  const handleSignUp = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
 
     let profileImageUrl = "";
 
-    if(!fullName){
+    if (!fullName) {
       setError("Full name is required");
+      setIsLoading(false);
       return;
     }
 
-    if(!validateEmail(email)){
+    if (!validateEmail(email)) {
       setError("Please enter a valid email address");
+      setIsLoading(false);
       return;
     }
 
-    if(!password){
+    if (!password) {
       setError("Password is required");
+      setIsLoading(false);
       return;
     }
 
@@ -45,9 +50,8 @@ const SignUp = () => {
 
     // signup api call
     try {
-
       // upload image if present
-      if(profilePic){
+      if (profilePic) {
         const imgUploadRes = await uploadImage(profilePic);
         profileImageUrl = imgUploadRes.imageUrl || "";
       }
@@ -59,75 +63,85 @@ const SignUp = () => {
         profileImageUrl
       });
 
-      const {token, user} = response.data;
-      if(token){
+      const { token, user } = response.data;
+      if (token) {
         localStorage.setItem("token", token);
         updateUser(user);
         navigate("/dashboard");
       }
     } catch (error) {
-      if(error.response && error.response.data.message){
+      if (error.response && error.response.data.message) {
         setError(error.response.data.message);
-      }
-      else{
+      } else {
         setError("Something went wrong. Please try again later");
       }
+    } finally {
+      setIsLoading(false);
     }
   }
+
   return (
     <AuthLayout>
-      <div className='lg:w-[100%] h-auto md:h-full mt-10 md:mt-0 flex flex-col justify-center'>
-        <h3 className='text-xl font-semibold text-black'>Create an Account</h3>
-        <p className='text-xs text-slate-700 mt-[5px] mb-6'>Join us today by entering your details below.</p>
-
-        <form onSubmit={handleSignUp}>
-
-          <ProfilePhotoSelector image={profilePic} setImage={setProfilePic} />
-
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-            <Input
-              label='Full Name'
-              type='text'
-              placeholder='Enter your Full Name'
-              value={fullName}
-              onChange={({target}) => setFullName(target.value)}
-            />
-
-          <Input
-            value={email}
-            onChange={({target}) => setEmail(target.value)}
-            label='Email Address'
-            type='text'
-            placeholder='Enter your email address'
-          />
-
-          <div className='col-span-2'>
-            <Input
-              value={password}
-              onChange={({target}) => setPassword(target.value)}
-              label='Password'
-              type='password'
-              placeholder='* * * * * * * *'
-            />
-          </div>
-          </div>
-
-          {error && <p className='text-red-500 text-xs pb-2.5'>{error}</p>}
-          
-          <button 
-            type='submit' 
-            className='btn-primary cursor-pointer'
-          >
-            SIGN UP
-          </button>
-          
-          <p className='text-[13px] text-slate-800 mt-3'>
-            Already have an account?{" "} 
-            <Link className='font-medium text-primary underline' to="/login">
-              Login
-            </Link>
+      <div className='w-full max-w-md mx-auto px-4 py-8 md:py-12'>
+        <div className='bg-white rounded-lg shadow-sm p-6 md:p-8'>
+          <h3 className='text-xl md:text-2xl font-semibold text-gray-800 text-center'>Create an Account</h3>
+          <p className='text-xs md:text-sm text-gray-600 mt-2 mb-6 text-center'>
+            Join us today by entering your details below.
           </p>
-        </form>
+
+          <form onSubmit={handleSignUp} className='space-y-4'>
+            <div className='flex justify-center'>
+              <ProfilePhotoSelector image={profilePic} setImage={setProfilePic} />
+            </div>
+
+            <div className='space-y-4'>
+              <Input
+                label='Full Name'
+                type='text'
+                placeholder='Enter your Full Name'
+                value={fullName}
+                onChange={({ target }) => setFullName(target.value)}
+              />
+
+              <Input
+                value={email}
+                onChange={({ target }) => setEmail(target.value)}
+                label='Email Address'
+                type='text'
+                placeholder='Enter your email address'
+              />
+
+              <Input
+                value={password}
+                onChange={({ target }) => setPassword(target.value)}
+                label='Password'
+                type='password'
+                placeholder='* * * * * * * *'
+              />
+            </div>
+
+            {error && (
+              <p className='text-red-500 text-xs md:text-sm text-center'>
+                {error}
+              </p>
+            )}
+
+            <button
+              type='submit'
+              className={`w-full btn-primary ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+              disabled={isLoading}
+            >
+              {isLoading ? 'Processing...' : 'SIGN UP'}
+            </button>
+
+            <p className='text-xs md:text-sm text-gray-600 text-center mt-4'>
+              Already have an account?{" "}
+              <Link className='font-medium text-primary hover:underline' to="/login">
+                Login
+              </Link>
+            </p>
+          </form>
+        </div>
       </div>
     </AuthLayout>
   )
